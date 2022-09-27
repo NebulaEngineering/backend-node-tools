@@ -1,6 +1,6 @@
 {
   "name": "@nebulae/backend-node-tools",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Tools collection for NebulaE Microservices Node Backends",
   "main": "index.js",
   "scripts": {
