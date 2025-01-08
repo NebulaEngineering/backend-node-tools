@@ -1,6 +1,6 @@
 {
   "name": "@nebulae/backend-node-tools",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "description": "Tools collection for NebulaE Microservices Node Backends",
   "main": "index.js",
   "scripts": {
@@ -28,6 +28,7 @@
   "dependencies": {
     "@google-cloud/pubsub": "^2.11.0",
     "async-mqtt": "^2.6.1",
+    "fengari": "^0.1.4",
     "rxjs": "^6.6.7",
     "uuid": "^3.3.2"
   },
