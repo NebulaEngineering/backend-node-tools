@@ -6,6 +6,7 @@ const cqrs = require('./lib/cqrs');
 const error = require('./lib/error');
 const log = require('./lib/log');
 const uniqueId = require('./lib/unique-id');
+const BusinessRuleEngine = require('./lib/business-rules-engine');
 
 module.exports = {
     auth,
@@ -13,5 +14,12 @@ module.exports = {
     cqrs,
     error,
     log,
-    uniqueId
+    uniqueId,
+    /**
+     * Manages business rules engine.
+     * @module BusinessRuleEngine
+     * @see BusinessRuleEngine
+     * @type {BusinessRuleEngine}
+     */
+    BusinessRuleEngine
 };
