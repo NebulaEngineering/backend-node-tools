@@ -170,6 +170,181 @@ of('Some CQRS Requet').pipe(
     mergeMap(rawData => CqrsResponseHelper.buildSuccessResponse$(rawRespponse)), // builds a valid CQRS API response
     catchError(err => CqrsResponseHelper.handleError$(err)) // handles Error and generates a valid CQRS API error response
 )
+```  
+
+## Business Rules Engine
+
+### build Success Response
+Engine capable of running LUA and JS scripts on runtime
+
+###  Usage: 
+
+#### Instance new Engine
+```js
+const { BusinessRuleEngine } = require('@nebulae/backend-node-tools');
+const businessRuleEngine = new BusinessRuleEngine();
+```
+
+#### Search and Load BusinessRule
+```js
+const businessRule = await businessRuleEngine.getBusinessRule$(
+        type, // Business rule type 
+        organizationId, // Organization the rule belongs to
+        companyId, // Company the rule belongs to or null if it does not apply
+        (filter, projection) => queryBusinessRules$(filter, projection)  // function to search BusinessRule specs
+    );
+```  
+
+#### Execute Business Rule
+
+##### Sync
+```js
+const args = [1,'A',{a:1}];
+const result = businessRule.execute$(
+  args, // function-to-call arguments
+  'exec' // name of the function to call
+)
+```
+
+##### Async
+```js
+const args = [1,'A',{a:1}];
+const result = await businessRule.execute$(
+  args, // function-to-call arguments
+  'exec' // name of the function to call
+)
+```
+
+
+### Functions
+
+#### getBusinessRule$(type, organizationId, companyId, queryBusinessRules$)
+Prepares and returns a Business Rule object based on the provided type, organization, and company. It uses a cache to avoid re-fetching business rules if a valid (non-expired) rule has already been retrieved.
+
+##### Function Signature
+```js
+async getBusinessRule$(
+  type: string,
+  organizationId: string,
+  companyId: string,
+  queryBusinessRules$: (filter: object, projection: object) => Promise<object[]>
+): Promise<BusinessRule>
+```  
+
+##### Parameters:
+
+1. type (string): The business rule type you want to load (e.g., "VALIDATION", "PRICING", etc.).
+organizationId (string):
+
+2. Identifier for the organization (Operador de Recaudo) that owns or manages these business rules.
+companyId (string):
+
+3. Identifier for the transport company (Operador de Transporte).
+If it’s not relevant, you can pass null or an empty string, but the function will default it to 'ANY' internally when filtering.
+queryBusinessRules$ ((filter: object, projection: object) => Promise<object[]>):
+
+4. A function used to query the data source for business rules.
+Signature: Accepts a MongoDB-like filter and projection, returns a Promise that resolves to an array of business rule metadata/specs.
+This function is called twice:
+First time: to fetch metadata of active & published business rules for the given type/org/company.
+Second time: to fetch the entire spec of the chosen rule (by _id) for loading the rule code.
+
+#### execute(args, functionName)
+Executes a function by name in the underlying VM/sandbox, passing any necessary arguments.  
+
+##### Function Signature
+```js
+execute(
+  args?: any[],
+  functionName?: string
+): Promise<any>
+```  
+
+##### Parameters:
+1. args (Array<any>): A list of arguments to pass into the function. Defaults to an empty array if not provided.
+
+2. functionName (string): The global function name in the sandbox or VM that should be invoked.
+Defaults to "exec" if not provided.
+
+##### Returns:
+<any>: value returned by the named function.
+
+#### execute$(args, functionName)
+An asynchronous, Promise-based version of execute. Invokes a named function in the sandbox or VM context and returns the result via a Promise.
+
+##### Function Signature
+```js
+async execute$(
+  args?: any[],
+  functionName?: string
+): Promise<any>
+```  
+
+##### Parameters:
+1. args (Array<any>): A list of arguments to pass into the function. Defaults to an empty array if not provided.
+
+2. functionName (string): The global function name in the sandbox or VM that should be invoked.
+Defaults to "exec" if not provided.
+
+##### Returns:
+Promise<any>: Resolves with the value returned by the named function.
+If the function throws or an error occurs, the promise is rejected with the relevant error.
+
+
+###  Example:
+
+```js
+'use strict';
+
+const { BusinessRuleEngine } = require('@nebulae/backend-node-tools');
+
+/* TEST INPUT DATA */
+const BusinessRuleDummyDatabase = require('./BusinessRuleDummyDatabase');
+const organizationId = "830b9d85-1cad-490a-b376-eb6c6c2c56c2";
+const companyId = null;
+const testFunctionInputArguments = [
+    "ENTRANCE",
+      "12345678-aaaa-bbbb-cccc-ddddeeefffff",
+      { deviceId: "CATDR-OCC-02", samUuid: "04350e6adb7780", currentTerminalTransactionSeq: 37989, coord: "$GPRMC,..." },
+      { id: "itinerary-uuid", pmcId: 60, name: "ItineraryName" },
+      { id: "route-uuid", pmcId: 99, name: "RouteName" },
+      { code: "PRD_DESFIRE", specs: {} },
+      { physicalType: "DESFIRE", id: 89405, uuid: "000000005EEC8866" },
+      { id: "profile-uuid", name: "SENA", active: true },
+      "AABBCCDD",
+      "EEFF0011",
+      "11223344"
+];
+
+
+/* playground */
+async function test() {
+    // intance new engine
+    const businessRuleEngine = new BusinessRuleEngine();
+    const businessRuleDummyDatabase = new BusinessRuleDummyDatabase();
+    
+    /* LUA TEST*/
+    const luaTestRule = await businessRuleEngine.getBusinessRule$(
+        'LUA_TEST', 
+        organizationId, 
+        companyId, 
+        (filter, projection) => businessRuleDummyDatabase.queryBusinessRules$(filter, projection)
+    );
+    const luaTestResult = await luaTestRule.execute$(testFunctionInputArguments, 'exec')
+    console.log('luaTestResult', JSON.stringify(luaTestResult, null, 2));
+    
+    /* JS TEST */
+    const jsTestRule = await businessRuleEngine.getBusinessRule$(
+        'JS_TEST', 
+        organizationId, 
+        companyId, 
+        (filter, projection) => businessRuleDummyDatabase.queryBusinessRules$(filter, projection)
+    );
+    const jsTestResult = await jsTestRule.execute$(testFunctionInputArguments, 'exec')
+    console.log('JSTestResult', JSON.stringify(jsTestResult, null, 2));
+}
+
+test().catch(console.error);
 ```
 
 
