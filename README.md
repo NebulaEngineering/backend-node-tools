@@ -178,9 +178,7 @@ of('Some CQRS Requet').pipe(
 ```  
 
 ## Business Rules Engine
-
-### build Success Response
-Engine capable of running LUA and JS scripts on runtime
+Engine capable of running LUA and JS scripts at runtime
 
 ###  Usage: 
 
