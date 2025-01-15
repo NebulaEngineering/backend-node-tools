@@ -203,7 +203,7 @@ const businessRule = await businessRuleEngine.getBusinessRule$(
 ##### Sync
 ```js
 const args = [1,'A',{a:1}];
-const result = businessRule.execute$(
+const result = businessRule.execute(
   args, // function-to-call arguments
   'exec' // name of the function to call
 )
