@@ -189,21 +189,40 @@ const businessRuleEngine = new BusinessRuleEngine();
 ```
 
 #### Search and Load BusinessRule
+
+##### Load pre-defined and stored Business Rule 
 ```js
 const businessRule = await businessRuleEngine.getBusinessRule$(
-        type, // Business rule type 
-        organizationId, // Organization the rule belongs to
-        companyId, // Company the rule belongs to or null if it does not apply
-        (filter, projection) => queryBusinessRules$(filter, projection)  // function to search BusinessRule specs
-    );
+    type, // Business rule type 
+    organizationId, // Organization the rule belongs to
+    companyId, // Company the rule belongs to or null if it does not apply
+    (filter, projection) => queryBusinessRules$(filter, projection)  // function to search BusinessRule specs
+);
 ```  
+
+##### Build Custom Rule
+```js
+const customRule = await businessRuleEngine.buildCustomBusinessRule$(
+  'CUSTOM_RULE',
+  'CustomRuleSample',
+  `
+    function exec(args)
+      return 'Hello from ' .. args[1]
+    end
+  `,
+  'LUA',
+  '5.2',
+  {}
+);
+```
+
 
 #### Execute Business Rule
 
 ##### Sync
 ```js
 const args = [1,'A',{a:1}];
-const result = businessRule.execute(
+const result = businessRule.execute(##### 
   args, // function-to-call arguments
   'exec' // name of the function to call
 )
@@ -218,6 +237,10 @@ const result = await businessRule.execute$(
 )
 ```
 
+#### Destroy Business Rule
+```js
+businessRule.destroy(); // frees up resources
+```
 
 ### Functions
 
@@ -271,6 +294,32 @@ Defaults to "exec" if not provided.
 
 ##### Returns:
 <any>: value returned by the named function.
+
+
+#### buildCustomBusinessRule$(type, name, source, language, languageVersion, languageArgs)
+Prepares and returns a Business Rule object based on the input language and source given
+
+##### Function Signature
+```js
+async buildCustomBusinessRule$(
+  type: string,
+  name: string,
+  source: string,
+  language: string,
+  languageVersion: string,
+  languageArgs: {object}
+  
+): Promise<BusinessRule>
+```  
+
+##### Parameters:
+
+1. type (string): The business rule type you want to load (e.g., "VALIDATION", "PRICING", etc.)
+2. name (String): Business rule name
+3. source (String): Business rule source code
+4. language (String):Business rule language
+5. languageVersion (String):Business rule language version
+6. languageArgs (Object): Business rule language arguments
 
 #### execute$(args, functionName)
 An asynchronous, Promise-based version of execute. Invokes a named function in the sandbox or VM context and returns the result via a Promise.
@@ -349,9 +398,3 @@ async function test() {
 
 test().catch(console.error);
 ```
-
-
-
-
-
-
