@@ -7,14 +7,23 @@ describe('BusinessRule (Lua)', () => {
     const businessRule = await businessRuleEngine.buildCustomBusinessRule$(
       'LUA_TEST',
       'LUA_TEST',
-      'function exec() return "Hello from Lua" end',
+      `
+    function exec()
+    local g = 0
+      for i=1,10000 do g=g+1 end
+      return 'Hello from Lua ' .. g
+    end
+  `,
       'LUA',
       '5.3',
       null
     );
 
     const result = businessRule.execute([]);
-    expect(result).to.equal('Hello from Lua');
+    const initTs = Date.now();
+    console.log('Execution time:', Date.now() - initTs);
+    expect(result).to.equal('Hello from Lua 10000');
+    
 
     if (typeof businessRule.destroy === 'function') {
       businessRule.destroy();
@@ -28,14 +37,16 @@ describe('BusinessRule (JS)', () => {
     const businessRule = await businessRuleEngine.buildCustomBusinessRule$(
       'JS_TEST',
       'JS_TEST',
-      'function exec() { return "Hello from JS"; }',
+      'function exec() { let g=0;for(let i=0;i<10000;i++){g++}; return "Hello from JS "+g; }', 
       'JS',
       10,
       null
     );
 
+    const initTs = Date.now();
     const result = businessRule.execute([]);
-    expect(result).to.equal('Hello from JS');
+    console.log('Execution time:', Date.now() - initTs);
+    expect(result).to.equal('Hello from JS 10000');
 
     if (typeof businessRule.destroy === 'function') {
       businessRule.destroy();
